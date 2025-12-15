@@ -78,11 +78,6 @@ jobs:
         with:
           cache: true
           channel: stable
-      - run: flutter doctor -v
-      - name: Accept Android SDK Licenses
-        run: yes | flutter doctor --android-licenses
-      - run: flutter doctor -v
-          
 
 #      - name: GH-Page Build
 #        working-directory: ./macless_haystack
@@ -115,6 +110,8 @@ jobs:
       - name: Android Build
         working-directory: ./macless_haystack
         run: |
+          yes | flutter doctor --android-licenses
+          flutter doctor -v
           flutter build apk --release --build-name=${{ env.VERSION }}   
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/android-application.apk
       - name: Upload Android Artifacts
