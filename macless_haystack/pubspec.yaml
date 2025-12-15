@@ -47,7 +47,6 @@ dependencies:
   provider: ^6.1.5+1
 
   # Location
-  universal_io: ^2.3.1
   flutter_map: ^8.2.2
   location: ^8.0.1
   geocoding: ^4.0.0
