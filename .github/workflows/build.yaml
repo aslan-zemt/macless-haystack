@@ -65,11 +65,6 @@ jobs:
         run: |
           wget https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-23-0/nrf-command-line-tools_10.23.0_amd64.deb
           sudo dpkg -i nrf-command-line-tools_10.23.0_amd64.deb
-      - name: Cache Nordic Toolchain
-        uses: actions/cache@v4
-        with:
-          path: /opt/nordic
-          key: ${{ runner.os }}-nrf-10.23.0
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
@@ -94,8 +89,9 @@ jobs:
         run: |
           flutter pub get --offline 
           flutter build web --profile --base-href "/macless-haystack/"
-      - name: Cache Flutter Pub Dependencies
+      - name: Cache Flutter Pub
         uses: actions/cache@v4
+        id: flutter-pub-cache
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('macless_haystack/pubspec.lock') }}
@@ -124,7 +120,7 @@ jobs:
           name: webapplication
           path: ./macless_haystack/build/webapplication
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/pip
@@ -149,6 +145,7 @@ jobs:
             firmware/nrf5x/compiled/*.bin
       - name: Build ESP32 firmware
         run: |
+          pio pkg list --project-dir firmware/ESP32/
           pio run -d firmware/ESP32/
           cd firmware/ESP32/.pio/build/esp32dev/
           zip -r esp32-firmware.zip firmware.bin partitions.bin bootloader.bin
