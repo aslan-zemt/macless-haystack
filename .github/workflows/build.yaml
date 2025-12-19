@@ -79,14 +79,6 @@ jobs:
             ~/.gradle/caches
             ./macless_haystack/.dart_tool
           key: flutter-android-${{ runner.os }}-${{ hashFiles('macless_haystack/pubspec.lock') }}
-      - name: Cache Android SDK
-        uses: actions/cache@v5
-        id: android-sdk-cache
-        with:
-          path: |
-            ~/android-sdk
-            ~/.android/cache
-          key: android-sdk-${{ runner.os }}
       - name: Android Build
         working-directory: ./macless_haystack
         env:
@@ -97,6 +89,7 @@ jobs:
           if [ "${{ steps.flutter-android-cache.outputs.cache-hit }}" != "true" ]; then
             flutter pub get
           fi
+          flutter test
           flutter build apk --release --build-name=${{ env.VERSION }}
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/android-application.apk
 #      - name: Upload Android Artifacts
@@ -104,30 +97,37 @@ jobs:
 #        with:
 #          name: android-application
 #          path: ./macless_haystack/build/app/outputs/flutter-apk/android-application.apk
-#      - name: GH-Page Build
-#        working-directory: ./macless_haystack
-#        run: |
-#          flutter pub get --offline
-#          flutter build web --profile --base-href "/macless-haystack/"
-#      - name: Cache Flutter Pub
-#        uses: actions/cache@v4
-#        id: flutter-pub-cache
-#        with:
-#          path: ~/.pub-cache
-#          key: ${{ runner.os }}-pub-${{ hashFiles('macless_haystack/pubspec.lock') }}
-#          restore-keys: ${{ runner.os }}-pub-
+      - name: Cache Flutter Web Build
+        uses: actions/cache@v5
+        id: flutter-web-cache
+        with:
+          path: |
+            ~/.pub-cache
+            ./macless_haystack/.dart_tool
+            ./macless_haystack/build/web  # Web-Build Output
+          key: flutter-web-${{ runner.os }}-${{ hashFiles('macless_haystack/pubspec.lock') }}
+          restore-keys: |
+            flutter-web-${{ runner.os }}-
+      - name: GH-Page Build
+        working-directory: ./macless_haystack
+        run: |
+          if [ "${{ steps.flutter-web-cache.outputs.cache-hit }}" != "true" ]; then
+            flutter pub get
+          fi
+          flutter build web --profile --base-href "/macless-haystack/"
 #      - name: Deploy to Github Pages
 #        if: github.ref == 'refs/heads/dev'
 #        uses: JamesIves/github-pages-deploy-action@v4
 #        with:
 #          folder: ./macless_haystack/build/web
 #
-#      - name: Web Build
-#        working-directory: ./macless_haystack
-#        run: |
-#          flutter pub get
-#          flutter test
-#          flutter build web --release
+      - name: Web Build
+        working-directory: ./macless_haystack
+        run: |
+          if [ "${{ steps.flutter-web-cache.outputs.cache-hit }}" != "true" ]; then
+            flutter pub get
+          fi
+          flutter build web --release
 #      - name: Copy files to web application
 #        run: |
 #          mkdir -p ./macless_haystack/build/webapplication
