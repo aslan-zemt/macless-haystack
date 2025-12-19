@@ -78,11 +78,6 @@ jobs:
         with:
           cache: true
           channel: stable
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 12266719
-
 #      - name: GH-Page Build
 #        working-directory: ./macless_haystack
 #        run: |
@@ -116,6 +111,8 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses
           flutter doctor -v
+          flutter clean
+          flutter pub get
           flutter build apk --release --build-name=${{ env.VERSION }}   
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/android-application.apk
       - name: Upload Android Artifacts
