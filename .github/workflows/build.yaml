@@ -78,22 +78,22 @@ jobs:
         with:
           cache: true
           channel: stable
-      - name: Cache Flutter for Android Build
+      - name: Cache Flutter
         uses: actions/cache@v5
-        id: flutter-android-cache
+        id: flutter-cache
         with:
           path: |
             ~/.pub-cache
             ~/.gradle/caches
             ./macless_haystack/.dart_tool
-          key: flutter-android-${{ runner.os }}-${{ hashFiles('macless_haystack/pubspec.lock') }}
+            ./macless_haystack/build/web
+          key: flutter-${{ runner.os }}-${{ hashFiles('macless_haystack/pubspec.lock') }}
       - name: Android Build
         working-directory: ./macless_haystack
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
         run: |
-          echo "   Pub Cache: ${{ steps.flutter-android-cache.outputs.cache-hit }}"
-          if [ "${{ steps.flutter-android-cache.outputs.cache-hit }}" != "true" ]; then
+          if [ "${{ steps.flutter-cache.outputs.cache-hit }}" != "true" ]; then
             flutter pub get
           fi
           flutter test
@@ -104,21 +104,10 @@ jobs:
         with:
           name: android-application
           path: ./macless_haystack/build/app/outputs/flutter-apk/android-application.apk
-      - name: Cache Flutter Web Build
-        uses: actions/cache@v5
-        id: flutter-web-cache
-        with:
-          path: |
-            ~/.pub-cache
-            ./macless_haystack/.dart_tool
-            ./macless_haystack/build/web  # Web-Build Output
-          key: flutter-web-${{ runner.os }}-${{ hashFiles('macless_haystack/pubspec.lock') }}
-          restore-keys: |
-            flutter-web-${{ runner.os }}-
       - name: GH-Page Build
         working-directory: ./macless_haystack
         run: |
-          if [ "${{ steps.flutter-web-cache.outputs.cache-hit }}" != "true" ]; then
+          if [ "${{ steps.flutter-cache.outputs.cache-hit }}" != "true" ]; then
             flutter pub get
           fi
           flutter build web --profile --base-href "/macless-haystack/"
@@ -131,7 +120,7 @@ jobs:
       - name: Web Build
         working-directory: ./macless_haystack
         run: |
-          if [ "${{ steps.flutter-web-cache.outputs.cache-hit }}" != "true" ]; then
+          if [ "${{ steps.flutter-cache.outputs.cache-hit }}" != "true" ]; then
             flutter pub get
           fi
           flutter build web --release
