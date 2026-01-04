@@ -10,7 +10,7 @@
 
 
 #define ADVERTISING_INTERVAL 5000  // advertising interval in milliseconds
-#define KEY_CHANGE_INTERVAL_MINUTES 30  // how often to rotate to new key in minutes
+#define KEY_CHANGE_INTERVAL_MINUTES 15  // how often to rotate to new key in minutes (Apple uses ~15 min)
 #define KEY_CHANGE_INTERVAL_DAYS 14  // how often to update battery status in days
 #define MAX_KEYS 20  // maximum number of keys to rotate through
 
@@ -80,13 +80,13 @@ static void key_change_timer_config(void)
 {
     uint32_t err_code;
 
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, NULL);
+    // NOTE: APP_TIMER_INIT is called once in main()
 
     // Create timer
     err_code = app_timer_create(&m_key_change_timer_id, APP_TIMER_MODE_REPEATED, key_change_timeout_handler);
     APP_ERROR_CHECK(err_code);
 
-    // Set timer interval 
+    // Set timer interval
     err_code = app_timer_start(m_key_change_timer_id, KEY_CHANGE_TIMER_TICKS, NULL);
     APP_ERROR_CHECK(err_code);
 }
@@ -95,13 +95,13 @@ static void battery_status_update_timer_config(void)
 {
     uint32_t err_code;
 
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, NULL);
+    // NOTE: APP_TIMER_INIT is called once in main()
 
     // Create timer
     err_code = app_timer_create(&m_battery_status_timer_id, APP_TIMER_MODE_REPEATED, battery_status_update_timeout_handler);
     APP_ERROR_CHECK(err_code);
 
-    // Set timer interval 
+    // Set timer interval
     err_code = app_timer_start(m_battery_status_timer_id, BATTERY_STATUS_UPDATE_TIMER_TICKS, NULL);
     APP_ERROR_CHECK(err_code);
 }
@@ -120,6 +120,11 @@ int main(void) {
             break;
         }
     }
+
+    // Initialize app_timer module ONCE before any timer creation
+    // FIX: Previously APP_TIMER_INIT was called in each timer_config function,
+    // which caused the second call to reset/break the first timer
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, NULL);
 
     // Init BLE stack and softdevice
     init_ble();
